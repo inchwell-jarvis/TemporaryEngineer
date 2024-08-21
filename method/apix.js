@@ -1,4 +1,4 @@
-import $store from '../../store/index.js'
+import $store from '../store/index.js'
 
 // 常量定义
 const TOKEN_KEY = 'token';

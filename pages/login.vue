@@ -102,10 +102,13 @@ export default {
 	methods: {
 		// 模拟区域经理登录
 		simulation_area_manager() {
-			// 存储token
-			localStorage.setItem('token', '23f1ff20628549c585b5d59955020a46');
-			// 跳转home.html
-			// window.location.href = './home.html';
+			// 存储信息
+			uni.setStorageSync('token', '23f1ff20628549c585b5d59955020a46');
+			uni.setStorageSync('name', '管理员');
+			uni.setStorageSync('mobile', '18888888888');
+			uni.navigateTo({
+				url: `/pages/index`
+			});
 		},
 
 		// 获取验证码

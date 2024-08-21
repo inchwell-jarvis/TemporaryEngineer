@@ -5,7 +5,7 @@ import uView from "uview-ui";
 Vue.use(uView);
 
 // 插件
-import method from './method/method.js'
+import method from './method/index.js'
 Vue.use(method)
 
 //引入vuex

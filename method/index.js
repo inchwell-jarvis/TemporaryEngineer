@@ -1,4 +1,4 @@
-import apix from './apix/index.js'
+import apix from './apix.js'
 export default {
 	install(Vue, options) {
 		// apix
