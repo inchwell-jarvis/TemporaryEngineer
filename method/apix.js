@@ -19,16 +19,12 @@ export default async function apix(http, data = {}, methods = {}) {
 		try {
 			const token_value = uni.getStorageSync(TOKEN_KEY);
 
-
 			// 获取到值了
-			if (token_value) {
-				console.log('token:' + token_value);
-			} else {
-				console.log('没有token')
-			}
-
-
-
+			// if (token_value) {
+			// 	console.log('token:' + token_value);
+			// } else {
+			// 	console.log('没有token')
+			// }
 
 			// 调接口
 			uni.request({
@@ -41,17 +37,17 @@ export default async function apix(http, data = {}, methods = {}) {
 				data: data,
 				success: (response) => {
 
-					// let api_response = {
-					// 	url: http,
-					// 	method: methods.method || 'GET',
-					// 	header: {
-					// 		'token': headerToken,
-					// 		...methods.headers
-					// 	},
-					// 	data,
-					// 	response
-					// }
-					// console.log('接口记录 apx：', api_response);
+					let api_response = {
+						url: http,
+						method: methods.method || 'GET',
+						header: {
+							'token': token_value,
+							...methods.headers
+						},
+						data,
+						response
+					}
+					console.log('接口记录 apix==>', api_response);
 
 
 					console.log(response)
@@ -84,14 +80,6 @@ export default async function apix(http, data = {}, methods = {}) {
 
 				}
 			});
-
-
-
-
-
-
-
-
 		} catch (e) {
 			console.log(e)
 			uni.showToast({

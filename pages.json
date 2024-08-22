@@ -19,6 +19,7 @@
 			"path": "pages/index",
 			"style": {
 				"navigationStyle": "custom",
+				"onReachBottomDistance": 100,
 				"app-plus": {
 					"titleView": false,
 					"bounce": "none" // 将回弹属性关掉
@@ -27,6 +28,16 @@
 		},
 		{
 			"path": "pages/verification",
+			"style": {
+				"navigationStyle": "custom",
+				"app-plus": {
+					"titleView": false,
+					"bounce": "none" // 将回弹属性关掉
+				}
+			}
+		},
+		{
+			"path": "pages/select_driver",
 			"style": {
 				"navigationStyle": "custom",
 				"app-plus": {
