@@ -44,7 +44,7 @@ export default {
 		finish(e) {
 			this.verification_code = e;
 			// 开始验证验证码
-			this.apix('http://39.100.116.85:6001/api/' + 'Account/AddTemporaryWorker', { Mobile: this.user_data.mobile, VerificationCode: this.verification_code, Name: this.user_data.name }, { method: 'post' })
+			this.apix('Account/AddTemporaryWorker', { Mobile: this.user_data.mobile, VerificationCode: this.verification_code, Name: this.user_data.name }, { method: 'post' })
 				.then((rv) => {
 					console.log(rv);
 					// 存储信息
@@ -72,7 +72,7 @@ export default {
 		},
 		// 重新发送验证码
 		resend_verification_code() {
-			this.apix('http://39.100.116.85:6001/api/' + 'Account/GetVerificationCode', { str: this.user_data.mobile }, { method: 'post' }).then((rv) => {
+			this.apix('Account/GetVerificationCode', { str: this.user_data.mobile }, { method: 'post' }).then((rv) => {
 				console.log(rv);
 				uni.showToast({
 					title: '已重新发送',

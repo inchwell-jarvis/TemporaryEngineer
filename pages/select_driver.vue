@@ -91,7 +91,7 @@ export default {
 		},
 		// 获取可用工程师
 		start() {
-			this.apix('http://39.100.116.85:6001/api/' + 'System/GetEmployeeMini', { type: '15' }).then((rv) => {
+			this.apix('System/GetEmployeeMini', { type: '15' }).then((rv) => {
 				console.log(rv);
 				this.engineers_back = rv.Data;
 				this.engineers_back.forEach((rv) => {
@@ -128,7 +128,7 @@ export default {
 				}
 			});
 			//
-			this.apix('http://39.100.116.85:6001/api/' + 'CarRental/UpdateCarSOOrderStateA', { id: this.user_data.ID, str: item.EmployeeId }, { method: 'post' }).then((rv) => {
+			this.apix('CarRental/UpdateCarSOOrderStateA', { id: this.user_data.ID, str: item.EmployeeId }, { method: 'post' }).then((rv) => {
 				console.log(rv);
 				uni.showToast({
 					title: '任务分配成功!',

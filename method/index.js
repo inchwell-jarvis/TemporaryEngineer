@@ -5,7 +5,7 @@ export default {
 		Vue.prototype.apix = apix
 
 		//title
-		Vue.prototype.title = function(res) {
+		Vue.prototype.hint = function(res) {
 			uni.showToast({
 				title: res,
 				icon: "none"

@@ -3,12 +3,12 @@ export default {
 	onLaunch: function () {
 		console.log('打开app');
 		try {
-			const value = uni.getStorageSync('token');
-			if (value) {
-				uni.navigateTo({
-					url: `/pages/index`
-				});
-			}
+			// const value = uni.getStorageSync('token');
+			// if (value) {
+			// 	uni.navigateTo({
+			// 		url: `/pages/index`
+			// 	});
+			// }
 		} catch (e) {
 			// error
 		}

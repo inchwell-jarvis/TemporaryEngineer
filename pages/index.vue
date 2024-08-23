@@ -79,9 +79,9 @@
 					<!-- 2、5 -->
 					<div class="item_footer_box" v-if="item.State == 2 || item.State == 5">
 						<!-- 管理员查看 可以给司机打电话 -->
-						<div class="admin_see1" v-if="item.IsAdmin && !item.IsMy" @click.stop="callPhone('分配', item)">
+						<div class="admin_see1" v-if="item.IsAdmin && !item.IsMy" @click.stop="call_phone(item.EngineerInfo.MobilePhone)">
 							<image src="../static/icon/phone-full_black.png" mode=""></image>
-							司机-分配
+							司机-{{ item.EngineerInfo.ChineseName }}
 						</div>
 						<!-- 工程师操作 -->
 						<div class="refuse" v-if="!(item.IsAdmin && !item.IsMy)" @click.stop="update_order('拒绝', item)">拒绝</div>
@@ -90,8 +90,11 @@
 					<!-- 3、6 -->
 					<div class="item_footer_box" v-if="item.State == 3">
 						<div class="reassignment" @click.stop="update_order('拒绝', item)">申请重分配</div>
-						<div class="contact_customers" @click.stop="callPhone(item.LinkMan.MobilePhone)">联系客户</div>
-						<div class="edit" v-if="item.State == 3" @click.stop="update_order('我已送达', item)">{{ '我已送达' }}</div>
+						<div class="contact_customers" @click.stop="call_phone(item.LinkMan.MobilePhone)">
+							<image src="../static/icon/phone-full_black.png" mode=""></image>
+							联系客户
+						</div>
+						<div class="edit" v-if="item.State == 3" @click.stop="update_order('我已送达-去拍照', item)">我已送达-去拍照</div>
 					</div>
 					<!--  -->
 					<div class="item_footer_box" v-if="item.State == 6">
@@ -158,6 +161,24 @@ export default {
 		// this.init();
 	},
 	methods: {
+		// 打电话
+		call_phone(Mobile) {
+			console.log(Mobile);
+			// 综合正则表达式，适用于移动电话和固定电话
+			const phoneRegex = /^(\+?86)?(0\d{2,3}-)?1[3-9]\d{9}$|^(0\d{2,3}-)?\d{7,8}$/;
+			if (!phoneRegex.test(Mobile)) {
+				uni.showToast({
+					title: '电话格式不正确',
+					duration: 2000,
+					icon: 'error'
+				});
+				return;
+			}
+
+			uni.makePhoneCall({
+				phoneNumber: Mobile //仅为示例
+			});
+		},
 		//
 		update_order(type, item) {
 			if (type == '分配') {
@@ -165,7 +186,21 @@ export default {
 					url: `/pages/select_driver?data=` + encodeURIComponent(JSON.stringify(item))
 				});
 			}
+
+			if (type == '接受' || type == '拒绝') {
+				this.apix('CarRental/UpdateCarSOOrderStateB', { ID: item.ID, str: type == '接受' ? 1 : 0 }, { method: 'post' }).then((rv) => {
+					this.hint('已' + type + '！');
+					this.start('静默刷新');
+				});
+			}
+
+			if (type == '我已送达-去拍照') {
+				uni.navigateTo({
+					url: `/pages/upload_image?data=` + encodeURIComponent(JSON.stringify(item))
+				});
+			}
 		},
+
 		// 字体颜色
 		edit_color(item) {
 			const colorMap = {
@@ -222,7 +257,7 @@ export default {
 		},
 		start(str) {
 			let data = { pageNum: 1, numPerPage: 999, orderField: '', orderDirection: '', search: '', area: '', cusName: '', plate: '', waitDo: -1, state: -1, Id: '', cusId: '' };
-			this.apix('http://39.100.116.85:6001/api/' + 'CarRental/GetCarSOOrders', data).then((rv) => {
+			this.apix('CarRental/GetCarSOOrders', data).then((rv) => {
 				console.log(rv);
 				// 收集数据备份
 				this.orders_back = rv.Data.Dtos;
@@ -234,17 +269,16 @@ export default {
 				this.orders = this.orders_back;
 
 				// 刷新后保持标签页
-				if (str == '刷新') {
-					// 获取当前标签的规则
-					const rules = this.filtering_rules[this.tab_index];
-					// 计算可以展示的数据
-					this.orders = rules.length ? this.orders_back.filter((item) => rules.includes(item.State)) : this.orders_back;
-					// 提示刷新成功
+				// 获取当前标签的规则
+				const rules = this.filtering_rules[this.tab_index];
+				// 计算可以展示的数据
+				this.orders = rules.length ? this.orders_back.filter((item) => rules.includes(item.State)) : this.orders_back;
+				// 提示刷新成功
+				if (str == '刷新')
 					uni.showToast({
 						title: '刷新成功!',
 						icon: 'none'
 					});
-				}
 			});
 		},
 		// 日期转换
@@ -502,6 +536,14 @@ export default {
 						margin: auto;
 						background: #f5f6fa;
 						color: #181c26;
+						display: flex; /* 启用Flexbox布局 */
+						justify-content: center;
+						align-items: center;
+						image {
+							width: 18px;
+							height: 18px;
+							margin-right: 4px;
+						}
 					}
 
 					.edit {

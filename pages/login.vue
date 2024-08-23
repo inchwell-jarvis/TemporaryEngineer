@@ -134,7 +134,7 @@ export default {
 			}
 			// 发送验证码
 			else {
-				this.apix('http://39.100.116.85:6001/api/' + 'Account/GetVerificationCode', { str: this.mobile_number }, { method: 'post' })
+				this.apix('Account/GetVerificationCode', { str: this.mobile_number }, { method: 'post' })
 					.then((rv) => {
 						console.log(rv);
 						// 前往输入验证码页面

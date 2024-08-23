@@ -1,5 +1,5 @@
 import $store from '../store/index.js'
-
+let api_header = $store.state.api_header + '/api/'
 // 常量定义
 const TOKEN_KEY = 'token';
 // const LOGIN_PAGE_URL = '../pages/signIn/index';
@@ -28,7 +28,7 @@ export default async function apix(http, data = {}, methods = {}) {
 
 			// 调接口
 			uni.request({
-				url: http,
+				url: api_header + http,
 				method: methods.method || 'GET',
 				header: {
 					'token': token_value,
