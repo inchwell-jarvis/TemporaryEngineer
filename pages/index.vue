@@ -1,11 +1,16 @@
 <template>
 	<view class="index">
+		<!-- 遮罩 z-index 300 -->
+		<div class="mask" v-if="filter_box_bool" @click="filter_box_bool = false">1</div>
+
+		<!-- 导航栏 -->
 		<u-navbar title="租车任务列表" :title-bold="true" title-color="#181C26" :is-back="false">
 			<view class="right_icon">
 				<image style="float: left" src="../static/icon/derection-left2.png" mode="" @click="custom_back()"></image>
-				<image style="float: right" src="../static/icon/refresh.png" mode="" @click="start('刷新')"></image>
+				<image style="float: right" src="../static/icon/refresh.png" mode="" @click="update_start()" :class="{ rotate: timer != null }"></image>
 			</view>
 		</u-navbar>
+
 		<!-- 状态筛选 -->
 		<div class="tabs">
 			<div v-for="(item, index) in tabs" :key="index" @click="tab_click(index)" :class="{ tab_item: true, tab_item_activation: item.activation }">
@@ -15,21 +20,30 @@
 				</div>
 			</div>
 		</div>
+
 		<!-- 接口筛选 -->
 		<div class="features">
-			<div class="features_item">
+			<div class="features_item" @click="filter_data(1)">
 				<span>车牌</span>
 				<image src="../static/icon/more.png" mode=""></image>
 			</div>
-			<div class="features_item">
+			<div class="features_item" @click="filter_data(2)">
 				<span>司机</span>
 				<image src="../static/icon/more.png" mode=""></image>
 			</div>
-			<div class="features_item">
+			<div class="features_item" @click="filter_data(3)">
 				<span>送车区域</span>
 				<image src="../static/icon/more.png" mode=""></image>
 			</div>
+			<!-- 筛选框 -->
+			<div class="filter_box" :style="{ height: filter_box_bool ? 'auto' : '0' }">
+				<!-- 按钮 -->
+				<div class="filter_box_but">
+					{{ filter_box_num }}
+				</div>
+			</div>
 		</div>
+
 		<!-- 提示 -->
 		<div class="tips">
 			<u-icon name="info-circle"></u-icon>
@@ -44,7 +58,7 @@
 		<!-- 有订单 -->
 		<div class="index_content" v-else>
 			<!-- 单个订单 -->
-			<div class="order_item" v-for="(item, index) in orders" :key="index">
+			<div class="order_item" v-for="(item, index) in orders" :key="index" @click="edit_order(item)">
 				<!-- 车牌 与 订单状态 -->
 				<div class="item_header">
 					<!-- 车牌 -->
@@ -88,13 +102,15 @@
 						<div class="accept" v-if="!(item.IsAdmin && !item.IsMy)" @click.stop="update_order('接受', item)">接受</div>
 					</div>
 					<!-- 3、6 -->
-					<div class="item_footer_box" v-if="item.State == 3">
+					<div class="item_footer_box" v-if="item.State == 3 || item.State == 10 || item.State == 11">
 						<div class="reassignment" @click.stop="update_order('拒绝', item)">申请重分配</div>
 						<div class="contact_customers" @click.stop="call_phone(item.LinkMan.MobilePhone)">
 							<image src="../static/icon/phone-full_black.png" mode=""></image>
 							联系客户
 						</div>
 						<div class="edit" v-if="item.State == 3" @click.stop="update_order('我已送达-去拍照', item)">我已送达-去拍照</div>
+						<div class="edit" v-if="item.State == 10" style="background: #4170fc52">等待客户确认图片</div>
+						<div class="edit" v-if="item.State == 11" @click.stop="update_order('输入取车码', item)">输入取车码</div>
 					</div>
 					<!--  -->
 					<div class="item_footer_box" v-if="item.State == 6">
@@ -104,6 +120,31 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- 取车码弹窗 -->
+		<u-popup v-model="pick_car_code_pop" mode="bottom" border-radius="20">
+			<view class="popclass">
+				<div class="popclass_head">
+					<div class="popclass_head_img">
+						<u-image width="55px" height="55px" src="../static/icon/key_picture.png"></u-image>
+					</div>
+					<div class="popclass_head_h1">
+						请输入
+						<span>取车码</span>
+					</div>
+					<div class="popclass_head_h2">需要客户出示取车码才能够将车辆交接给客户</div>
+				</div>
+				<div class="popclass_number">
+					<u-message-input mode="box" @finish="finish"></u-message-input>
+				</div>
+				<div class="popclass_but">
+					<div class="popclass_buttton">
+						<div class="edit_quxiao" @tap="pick_car_code_pop = false">取消</div>
+						<div class="edit_queren" @tap="confirm_car_code()">确认</div>
+					</div>
+				</div>
+			</view>
+		</u-popup>
 	</view>
 </template>
 
@@ -111,6 +152,7 @@
 export default {
 	data() {
 		return {
+			timer: null,
 			// tab 切换
 			tabs: [
 				{
@@ -141,13 +183,22 @@ export default {
 				0: [],
 				1: [1],
 				2: [2, 5],
-				3: [3, 6, 7]
+				3: [3, 6, 7, 10, 11]
 			},
 			// -------------------------------------------
 			//订单数据 备份
 			orders_back: [],
 			//订单数据 展示
-			orders: []
+			orders: [],
+			// orders
+			orders_item: {},
+			// 取车码弹窗
+			pick_car_code_pop: false,
+			pick_car_code: '',
+
+			//
+			filter_box_bool: false,
+			filter_box_num: 1
 		};
 	},
 	onLoad() {},
@@ -161,6 +212,28 @@ export default {
 		// this.init();
 	},
 	methods: {
+		filter_data(num) {
+			this.filter_box_bool = true;
+			this.filter_box_num = num;
+			console.log(num);
+		},
+		//
+		confirm_car_code() {
+			this.apix('CarRental/UpdateCarSOOrderStateC', { ID: this.orders_item.ID, str: this.pick_car_code }, { method: 'post' }).then((rv) => {
+				uni.showToast({
+					title: '送车成功',
+					icon: 'success'
+				});
+				this.pick_car_code_pop = false;
+				this.update_start();
+			});
+		},
+		// confirm_car_code
+		finish(value) {
+			this.pick_car_code = value;
+			console.log(value);
+		},
+
 		// 打电话
 		call_phone(Mobile) {
 			console.log(Mobile);
@@ -198,6 +271,11 @@ export default {
 				uni.navigateTo({
 					url: `/pages/upload_image?data=` + encodeURIComponent(JSON.stringify(item))
 				});
+			}
+
+			if (type == '输入取车码') {
+				this.pick_car_code_pop = true;
+				this.orders_item = item;
 			}
 		},
 
@@ -255,6 +333,14 @@ export default {
 			);
 			console.log(data);
 		},
+		// 刷新订单
+		update_start() {
+			if (this.timer == null) {
+				this.timer = 'null';
+				this.timer_count += 1;
+				this.start('刷新');
+			}
+		},
 		start(str) {
 			let data = { pageNum: 1, numPerPage: 999, orderField: '', orderDirection: '', search: '', area: '', cusName: '', plate: '', waitDo: -1, state: -1, Id: '', cusId: '' };
 			this.apix('CarRental/GetCarSOOrders', data).then((rv) => {
@@ -274,11 +360,16 @@ export default {
 				// 计算可以展示的数据
 				this.orders = rules.length ? this.orders_back.filter((item) => rules.includes(item.State)) : this.orders_back;
 				// 提示刷新成功
-				if (str == '刷新')
+				if (str == '刷新') {
 					uni.showToast({
 						title: '刷新成功!',
 						icon: 'none'
 					});
+					// 清除定时器标识
+					setTimeout(() => {
+						this.timer = null;
+					}, 1000);
+				}
 			});
 		},
 		// 日期转换
@@ -323,6 +414,12 @@ export default {
 
 			// 组合日期和时间字符串
 			return `${month}月${day}日 ${dayPart} ${timePart}`;
+		},
+		// 前往编辑订单页
+		edit_order(item) {
+			uni.navigateTo({
+				url: `/pages/edit?data=` + encodeURIComponent(JSON.stringify(item))
+			});
 		}
 	}
 };
@@ -334,6 +431,31 @@ export default {
 	height: 100%;
 	color: #181c26;
 	background-color: #f5f6fa;
+	position: relative;
+	// 全局遮罩
+	.mask {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		background: #00000099;
+		z-index: 300;
+		transition: 0.4s;
+	}
+
+	.rotate {
+		animation: rotate-animation 1s linear infinite;
+	}
+
+	@keyframes rotate-animation {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
 
 	.no_orders {
 		width: 100%;
@@ -576,6 +698,8 @@ export default {
 		background-color: #fff;
 		border-bottom: 0.5px solid #090f2014;
 		box-sizing: border-box;
+		position: relative;
+		z-index: 980;
 
 		.tab_item {
 			width: 25%;
@@ -616,14 +740,32 @@ export default {
 		width: 100%;
 		height: 44px;
 		background-color: #fff;
-		padding-left: 10px;
+		padding: 8px 10px;
 		box-sizing: border-box;
-		display: flex;
-		justify-self: start;
-		align-items: center;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr); /* 创建三列，每列等宽 */
+		grid-gap: 10px; /* 设置列和行之间的间距为10px */
+		position: relative;
+		z-index: 980;
 
+		.filter_box {
+			width: 100%;
+			min-height: 0;
+			background-color: #fff;
+			position: absolute;
+			z-index: 99;
+			left: 0;
+			transition: 0.4s;
+			overflow: hidden;
+			top: 44px;
+			.filter_box_but {
+				width: 100%;
+				height: 64px;
+				border: 2px solid #2979ff;
+				box-sizing: border-box;
+			}
+		}
 		.features_item {
-			display: inline-block;
 			height: 28px;
 			border-radius: 2px;
 			background: #f5f6fa;
@@ -631,12 +773,11 @@ export default {
 			color: #181c26b2;
 			padding: 6px 10px;
 			box-sizing: border-box;
-			margin-left: 10px;
 			font-size: 12px;
-
-			span {
-				float: left;
-			}
+			text-align: center;
+			display: flex;
+			justify-content: center;
+			z-index: 200;
 
 			image {
 				width: 16px;
@@ -656,6 +797,84 @@ export default {
 		padding-left: 20px;
 		box-sizing: border-box;
 		overflow: hidden;
+	}
+	// 取车码弹窗
+	.popclass {
+		width: 100%;
+		min-height: 10px;
+		padding: 30px 20px 20px;
+		box-sizing: border-box;
+		.popclass_head {
+			width: 100%;
+			height: 120px;
+			box-sizing: border-box;
+			.popclass_head_img {
+				width: 100%;
+				height: 55px;
+				display: flex;
+				justify-content: center;
+			}
+			.popclass_head_h1 {
+				width: 100%;
+				height: 40px;
+				line-height: 40px;
+				font-size: 24px;
+				color: #181c26;
+				text-align: center;
+				font-weight: bold;
+				span {
+					color: #e54337;
+				}
+			}
+			.popclass_head_h2 {
+				width: 100%;
+				height: 20px;
+				line-height: 20px;
+				font-size: 14px;
+				color: #181c26b2;
+				text-align: center;
+			}
+		}
+		.popclass_number {
+			width: 100%;
+			height: 80px;
+			padding: 10px 0;
+			box-sizing: border-box;
+		}
+		.popclass_but {
+			width: 100%;
+			height: 100px;
+			padding: 30px 0px 20px;
+			box-sizing: border-box;
+			.popclass_buttton {
+				width: 100%;
+				height: 50px;
+				box-sizing: border-box;
+				display: flex; /* 启用Flexbox布局 */
+				justify-content: space-around;
+				.edit_quxiao {
+					width: 20%;
+					height: 100%;
+					border-radius: 8px;
+					background: #f5f6fa;
+					text-align: center;
+					line-height: 50px;
+					font-size: 16px;
+					font-weight: bold;
+				}
+				.edit_queren {
+					width: 76%;
+					height: 100%;
+					border-radius: 8px;
+					background: #4170fc;
+					text-align: center;
+					line-height: 50px;
+					font-size: 16px;
+					font-weight: bold;
+					color: #ffffff;
+				}
+			}
+		}
 	}
 }
 </style>

@@ -74,7 +74,8 @@
 		<!-- 底部确认按钮 -->
 		<div class="foolter_but">
 			<!-- 下一步 -->
-			<div class="next_step">下一步</div>
+			<div class="next_step" v-if="upload_tags != 2" :style="{ background: upload_image_group[upload_tags].upload_completed ? '#4170FC' : '#4170fc52' }" @click="tab_upload_tags({}, upload_tags + 1)">下一步</div>
+			<div class="next_step" v-else :style="{ background: upload_image_group[upload_tags].upload_completed ? '#4170FC' : '#4170fc52' }" @click="upload_completed()">确认</div>
 		</div>
 
 		<!-- 弹出层 -->
@@ -148,6 +149,18 @@ export default {
 	created() {},
 	watch: {},
 	methods: {
+		// 上传完毕
+		upload_completed() {
+			this.apix('CarRental/CompleteCarSOOrderImage', { Id: this.user_data.CarSOId }, { method: 'post' }).then((rv) => {
+				uni.showToast({
+					title: '上传成功，等待客户审核!',
+					icon: 'none'
+				});
+				uni.navigateBack({
+					url: './index'
+				});
+			});
+		},
 		// custom_back
 		custom_back() {
 			uni.navigateBack({
@@ -171,8 +184,9 @@ export default {
 					}
 				});
 				// 判断三项的图片是否上传完成了
-				this.upload_image_group.forEach((rv) => {
+				this.upload_image_group.forEach((rv, index) => {
 					rv.upload_completed = rv.images.every((item) => item.upload_image !== undefined && item.upload_image !== null && item.upload_image !== '');
+					if (rv.upload_completed) this.upload_tags = index == 2 ? index : index + 1;
 				});
 				//
 				console.log(this.upload_image_group);
@@ -195,16 +209,26 @@ export default {
 		// 判断index>当前坐标说明是向往后走 这时再判断当前模块是否上传完成了
 
 		tab_upload_tags(item, index) {
-			// index 是想去的坐标 可能为 0 1 2
-			// 跳转前要判断前面的bool是否为true 去第一个就不用判断了
-			let bool0 = this.upload_image_group[0].upload_completed;
-			let bool1 = this.upload_image_group[1].upload_completed;
-			let bool2 = this.upload_image_group[2].upload_completed;
-			// 判断条件
+			// 判断是否往前跳转，往前跳转不需要判断
+			if (index < this.upload_tags) {
+				this.upload_tags = index;
+				return;
+			}
 
-			// 切换模块
-			this.upload_tags = index;
+			// 判断当前模块是否完成上传
+			if (index === 1 && this.upload_image_group[0].upload_completed) {
+				this.upload_tags = index;
+			} else if (index === 2 && this.upload_image_group[0].upload_completed && this.upload_image_group[1].upload_completed) {
+				this.upload_tags = index;
+			} else {
+				uni.showToast({
+					title: '请依次完成任务!',
+					icon: 'none'
+				});
+			}
+			// 如果需要，可以在这里添加 else 或其它逻辑处理未完成的情况
 		},
+
 		//
 		befor_upload_image(index) {
 			// 生成临时图片名 需拼接图片格式使用
@@ -231,7 +255,7 @@ export default {
 					let data = {
 						Id: that.user_data.ID,
 						FileStr: base64,
-						FileName: '',
+						// FileName: '',
 						Type: String(that.upload_tags + 1), // 当前上传的是属于哪个类目的 Type[1车辆图片、2工具图片、3其它文件]
 						Other: that.upload_image_index // 当前上传的属于类目的第几个文件
 					};
