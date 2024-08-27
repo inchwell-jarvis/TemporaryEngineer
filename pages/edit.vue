@@ -148,8 +148,10 @@
 				<div class="edit" v-if="data.State == 11" @click.stop="update_order('输入取车码')">输入取车码</div>
 			</div>
 			<!-- 归位 -->
-			<div class="but" v-if="data.State == 7">
-				<div class="button" @tap.stop="the_car_has_returned(data)">车已归位</div>
+			<!--  -->
+			<div class="but" v-if="data.State == 6">
+				<div class="refuse" @click.stop="update_order('下线')">下线</div>
+				<div class="accept" @click.stop="update_order('继续上线')">车辆归位 - 休息</div>
 			</div>
 		</div>
 
@@ -274,6 +276,20 @@ export default {
 			if (type == '输入取车码') {
 				this.show = true;
 				this.show_item = item;
+			}
+
+			if (type == '下线') {
+				this.apix('CarRental/UpdateCarSOOrderStateE', { ID: item.ID }, { method: 'post' }).then((rv) => {
+					this.hint('已' + type + '！');
+					this.start('静默刷新');
+				});
+			}
+
+			if (type == '继续上线') {
+				this.apix('CarRental/UpdateCarSOOrderStateD', { ID: item.ID }, { method: 'post' }).then((rv) => {
+					this.hint('已' + type + '！');
+					this.start('静默刷新');
+				});
 			}
 		},
 		// 联系客户

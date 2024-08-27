@@ -115,7 +115,7 @@
 					<!--  -->
 					<div class="item_footer_box" v-if="item.State == 6">
 						<div class="refuse" @click.stop="update_order('下线', item)">下线</div>
-						<div class="accept" @click.stop="update_order('继续上线', item)">继续上线</div>
+						<div class="accept" @click.stop="update_order('继续上线', item)">车辆归位 - 休息</div>
 					</div>
 				</div>
 			</div>
@@ -276,6 +276,20 @@ export default {
 			if (type == '输入取车码') {
 				this.pick_car_code_pop = true;
 				this.orders_item = item;
+			}
+
+			if (type == '下线') {
+				this.apix('CarRental/UpdateCarSOOrderStateE', { ID: item.ID }, { method: 'post' }).then((rv) => {
+					this.hint('已' + type + '！');
+					this.start('静默刷新');
+				});
+			}
+
+			if (type == '继续上线') {
+				this.apix('CarRental/UpdateCarSOOrderStateD', { ID: item.ID }, { method: 'post' }).then((rv) => {
+					this.hint('已' + type + '！');
+					this.start('静默刷新');
+				});
 			}
 		},
 
