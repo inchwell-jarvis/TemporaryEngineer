@@ -42,9 +42,9 @@
 			<div class="image_section">
 				<div class="image_section_item" v-for="(item, index) in upload_image_group[upload_tags].images" :key="index">
 					<!-- 未上传 -->
-					<div class="not_uploaded" v-if="!item.upload_image" @click="befor_upload_image(index)">
+					<div class="not_uploaded" v-if="!item.upload_image" @click="befor_upload_image(item, index)">
 						<!-- 缩略图 不过缩略图也得有图片才展示 -->
-						<u-image width="100%" height="78px" mode="aspectFit" :src="item.thumbnail" v-if="item.thumbnail" :fade="false"></u-image>
+						<u-image width="100%" height="78px" mode="aspectFit" :src="item.teaching_diagram" v-if="item.teaching_diagram" :fade="false"></u-image>
 						<!-- 遮罩 -->
 						<div class="mask"></div>
 						<!-- 示例号 -->
@@ -63,9 +63,9 @@
 					<!-- 已上传 -->
 					<div class="already_uploaded" v-else @click="view_picture(item.upload_image)">
 						<!-- 图片 -->
-						<u-image width="100%" height="78px" mode="aspectFit" :src="item.upload_image" :fade="false"></u-image>
+						<u-image width="100%" height="78px" :src="item.upload_image" :fade="false"></u-image>
 						<!-- 重新上传 -->
-						<div class="re_upload" @click.stop="befor_upload_image(index)">重新上传</div>
+						<div class="re_upload" @click.stop="befor_upload_image(item, index)">重新上传</div>
 					</div>
 				</div>
 			</div>
@@ -79,10 +79,30 @@
 		</div>
 
 		<!-- 弹出层 -->
-		<u-popup v-model="upload_image_popup" mode="bottom" border-radius="30">
+		<u-popup v-model="upload_image_popup" mode="bottom" border-radius="30" :closeable="true" :close-icon-color="'#181C26B2'">
 			<view class="upload_image_box">
 				<!-- header -->
 				<div class="upload_image_header">示例说明</div>
+				<!--  -->
+				<div class="image_example">
+					<div class="image_example_view">
+						<u-image width="100%" height="100%" mode="aspectFit" v-if="upload_image_image" :src="upload_image_image" :fade="false"></u-image>
+					</div>
+					<div class="prompt">
+						<div class="prompt_item">
+							<u-image class="image" width="22px" height="22px" mode="aspectFit" src="../static/icon/selected-full2.png" :fade="false"></u-image>
+							图片要清晰
+						</div>
+						<div class="prompt_item">
+							<u-image class="image" width="22px" height="22px" mode="aspectFit" src="../static/icon/selected-full2.png" :fade="false"></u-image>
+							请按照示例角度拍摄车辆照片
+						</div>
+					</div>
+				</div>
+				<!--  -->
+				<div class="but_view">
+					<div class="but" @click="upload_image()">拍照上传</div>
+				</div>
 			</view>
 		</u-popup>
 	</view>
@@ -95,47 +115,47 @@ export default {
 		return {
 			upload_tags: 0, // 当前是第几个tab
 			upload_image_popup: false, // 是否打开上传图片弹窗
+			upload_image_image: '', // 是否打开上传图片示例
 			upload_image_index: 0, // 当前上传图片的坐标
 			upload_image_group: [
 				{
 					name: '车辆图片',
 					upload_completed: false,
 					images: [
-						// thumbnail 缩略图
 						//	teaching_diagram 教学图
 						// upload_image 工程师上传的图片
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' }
+						{ teaching_diagram: require('../static/teaching_diagram/1-1-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/1-2-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/1-3-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/1-4-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/1-5-example.png'), upload_image: '' }
 					]
 				},
 				{
 					name: '工具箱图片',
 					upload_completed: false,
 					images: [
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' }
+						{ teaching_diagram: require('../static/teaching_diagram/2-1-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/2-2-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/2-3-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/2-4-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/2-5-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/2-6-example.png'), upload_image: '' }
 					]
 				},
 				{
 					name: '其他工具图片',
 					upload_completed: false,
 					images: [
-						{ thumbnail: 'http://39.100.116.85:6001/File/CarRental/CarSO/9641960f-1978-4063-b454-8e96365f589c_d64e26e6-2f87-4794-aff6-c498afd9c7bb_1724396967023.jpg', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' },
-						{ thumbnail: '', teaching_diagram: '', upload_image: '' }
+						{ teaching_diagram: require('../static/teaching_diagram/3-1-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/3-2-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/3-3-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/3-4-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/3-5-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/3-6-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/3-7-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/3-8-example.png'), upload_image: '' },
+						{ teaching_diagram: require('../static/teaching_diagram/3-9-example.png'), upload_image: '' }
 					]
 				}
 			]
@@ -230,17 +250,19 @@ export default {
 		},
 
 		//
-		befor_upload_image(index) {
-			// 生成临时图片名 需拼接图片格式使用
+		befor_upload_image(item, index) {
+			// 标记当前上传的图片属于哪个类目
 			this.upload_image_index = index;
+			this.upload_image_image = item.teaching_diagram;
 			// 打开上传图片实例
-			// this.upload_image_popup = true;
+			this.upload_image_popup = true;
 			// 开发临时上传
-			this.upload_image();
+			// this.upload_image();
 		},
 		// 上传图片
 		async upload_image() {
 			const that = this;
+			that.upload_image_popup = false;
 			// 生成对应位置图片名称
 			uni.chooseImage({
 				count: 1, //默认9
@@ -289,6 +311,57 @@ export default {
 			font-weight: bold;
 			line-height: 52px;
 			text-align: center;
+		}
+		.image_example {
+			width: 100%;
+			height: 300px;
+			border-radius: 4px;
+			padding: 12px;
+			box-sizing: border-box;
+			.image_example_view {
+				width: 100%;
+				height: 212px;
+				background: #f5f6fa;
+				border-radius: 4px;
+			}
+			.prompt {
+				width: 100%;
+				height: 52px;
+				margin-top: 12px;
+
+				.prompt_item {
+					width: 100%;
+					height: 22px;
+					margin-top: 4px;
+					// border: 1px solid #ccc;
+					box-sizing: border-box;
+					font-size: 15px;
+					line-height: 22px;
+					font-weight: bold;
+					.image {
+						float: left;
+						margin-right: 4px;
+					}
+				}
+			}
+		}
+		.but_view {
+			width: 100%;
+			height: 100px;
+			background-color: #fff;
+			padding: 12px;
+			box-sizing: border-box;
+			border-top: 1px solid #090f2014;
+			.but {
+				width: 100%;
+				border-radius: 8px;
+				height: 48px;
+				background-color: #4170fc;
+				text-align: center;
+				line-height: 48px;
+				font-size: 16px;
+				color: #ffffff;
+			}
 		}
 	}
 

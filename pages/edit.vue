@@ -57,7 +57,7 @@
 					<p>{{ data.QuYuManager.MobilePhone }}</p>
 				</div>
 			</div>
-			<div class="link_man_2">
+			<div class="link_man_2" v-if="data.StateStr != '未启动'">
 				<div class="icon" @tap.stop="contact_customers()">
 					<div class="phone"><u-icon name="phone-fill" color="#181C26"></u-icon></div>
 				</div>
@@ -111,12 +111,12 @@
 
 			<div class="order_information_item">
 				<span>下单时间</span>
-				<span class="info">{{ data.CreateDate }}</span>
+				<span class="info">{{ data.SOCreateDate }}</span>
 			</div>
 
 			<div class="order_information_item">
 				<span>支付时间</span>
-				<span class="info">支付时间</span>
+				<span class="info">{{ data.PayDt }}</span>
 			</div>
 
 			<div class="order_information_item" style="margin-bottom: 10px">
@@ -151,7 +151,7 @@
 			<!--  -->
 			<div class="but" v-if="data.State == 6">
 				<div class="refuse" @click.stop="update_order('下线')">下线</div>
-				<div class="accept" @click.stop="update_order('继续上线')">车辆归位 - 休息</div>
+				<div class="accept" @click.stop="update_order('继续上线')">车辆归位 - 继续在线</div>
 			</div>
 		</div>
 
@@ -372,7 +372,8 @@ export default {
 				// 联系人与电话
 				this.data.LinkManStr = this.data.LinkMan.ChineseName + ' ' + this.data.LinkMan.MobilePhone;
 				// 联系人与电话
-				this.data.CreateDate = this.data.CreateDate.substring(0, this.data.CreateDate.indexOf('.')).replace('T', ' ');
+				this.data.SOCreateDate = this.data.SOCreateDate.substring(0, this.data.SOCreateDate.indexOf('.')).replace('T', ' ');
+				this.data.PayDt = this.data.PayDt.substring(0, this.data.PayDt.indexOf('.')).replace('T', ' ');
 				// 车辆特征
 				if (this.data.Feature) {
 					this.data.Feature = JSON.parse(this.data.Feature).join('、');

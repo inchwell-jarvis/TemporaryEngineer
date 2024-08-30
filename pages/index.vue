@@ -1,5 +1,5 @@
 <template>
-	<view class="index">
+	<view class="index" @click="(filter_box_bool = false), (filter_box_num = 0)">
 		<!-- 遮罩 z-index 300 -->
 		<div class="mask" v-if="filter_box_bool" @click="filter_box_bool = false">1</div>
 
@@ -22,24 +22,50 @@
 		</div>
 
 		<!-- 接口筛选 -->
-		<div class="features">
-			<div class="features_item" @click="filter_data(1)">
+		<div class="features" @click.stop="">
+			<div class="features_item" @click.stop="filter_data(1)" :style="{ background: filter_box_num == 1 ? '#4170FC1A' : '', color: filter_box_num == 1 ? '#4170FC' : '' }">
+				<span>区域</span>
+				<image v-if="filter_box_num != 1" src="../static/icon/more.png" mode=""></image>
+				<image v-else src="../static/icon/more_to.png" mode=""></image>
+			</div>
+			<div class="features_item" @click.stop="filter_data(2)" :style="{ background: filter_box_num == 2 ? '#4170FC1A' : '', color: filter_box_num == 2 ? '#4170FC' : '' }">
 				<span>车牌</span>
-				<image src="../static/icon/more.png" mode=""></image>
+				<image v-if="filter_box_num != 2" src="../static/icon/more.png" mode=""></image>
+				<image v-else src="../static/icon/more_to.png" mode=""></image>
 			</div>
-			<div class="features_item" @click="filter_data(2)">
+			<div class="features_item" @click.stop="filter_data(3)" :style="{ background: filter_box_num == 3 ? '#4170FC1A' : '', color: filter_box_num == 3 ? '#4170FC' : '' }">
 				<span>司机</span>
-				<image src="../static/icon/more.png" mode=""></image>
+				<image v-if="filter_box_num != 3" src="../static/icon/more.png" mode=""></image>
+				<image v-else src="../static/icon/more_to.png" mode=""></image>
 			</div>
-			<div class="features_item" @click="filter_data(3)">
-				<span>送车区域</span>
-				<image src="../static/icon/more.png" mode=""></image>
-			</div>
+
 			<!-- 筛选框 -->
-			<div class="filter_box" :style="{ height: filter_box_bool ? 'auto' : '0' }">
+			<div class="filter_options" v-if="filter_box_bool && filter_box_num == 1">
+				<div class="filter_options_item" v-for="(item, index) in area_search" @click="item.bool = !item.bool" :style="{ color: item.bool ? '#4170FC' : '', background: item.bool ? '#4170FC1A' : '' }">
+					{{ item.text }}
+				</div>
+			</div>
+			<!-- 车牌号筛选 -->
+			<div class="filter_options" v-if="filter_box_bool && filter_box_num == 2">
+				<div class="filter_options_item" v-for="(item, index) in license_plate" @click="item.bool = !item.bool" :style="{ color: item.bool ? '#4170FC' : '', background: item.bool ? '#4170FC1A' : '' }">
+					{{ item.text }}
+				</div>
+			</div>
+			<!-- 司机筛选 driver_search -->
+			<div class="filter_options" v-if="filter_box_bool && filter_box_num == 3">
+				<div class="filter_options_item" v-for="(item, index) in driver_search" @click="item.bool = !item.bool" :style="{ color: item.bool ? '#4170FC' : '', background: item.bool ? '#4170FC1A' : '' }">
+					{{ item.text }}
+				</div>
+			</div>
+			<!-- 按钮组 -->
+			<div class="filter_box" v-if="filter_box_bool">
 				<!-- 按钮 -->
 				<div class="filter_box_but">
-					{{ filter_box_num }}
+					<div class="but_left" @click.stop="reset_data()">
+						<image src="../static/icon/clear.png" mode=""></image>
+						重置
+					</div>
+					<div class="but_right" @click.stop="confirm_search()">确定</div>
 				</div>
 			</div>
 		</div>
@@ -85,7 +111,7 @@
 				</div>
 
 				<!-- 操作按钮 -->
-				<div class="item_footer_">
+				<div class="item_footer_" v-if="item.State != 8">
 					<!-- 1 -->
 					<div class="item_footer_box" v-if="item.State == 1">
 						<div class="button" @click.stop="update_order('分配', item)">分配</div>
@@ -115,7 +141,7 @@
 					<!--  -->
 					<div class="item_footer_box" v-if="item.State == 6">
 						<div class="refuse" @click.stop="update_order('下线', item)">下线</div>
-						<div class="accept" @click.stop="update_order('继续上线', item)">车辆归位 - 休息</div>
+						<div class="accept" @click.stop="update_order('继续上线', item)">车辆归位 - 继续在线</div>
 					</div>
 				</div>
 			</div>
@@ -198,7 +224,14 @@ export default {
 
 			//
 			filter_box_bool: false,
-			filter_box_num: 1
+			filter_box_num: 0,
+
+			// 车牌号检索
+			license_plate: [],
+			// 司机检索
+			driver_search: [],
+			// 区域检索
+			area_search: []
 		};
 	},
 	onLoad() {},
@@ -212,10 +245,73 @@ export default {
 		// this.init();
 	},
 	methods: {
+		reset_data() {
+			this.filter_box_bool = false;
+			this.filter_box_num = 99;
+
+			// 清空车牌号检索
+			this.license_plate.forEach((item) => {
+				item.bool = false;
+			});
+			// 清空司机检索
+			this.driver_search.forEach((item) => {
+				item.bool = false;
+			});
+			// 清空区域选择
+			this.area_search.forEach((item) => {
+				item.bool = false;
+			});
+
+			// 获取当前标签的规则
+			const rules = this.filtering_rules[this.tab_index];
+			// 计算可以展示的数据
+			this.orders = rules.length ? this.orders_back.filter((item) => rules.includes(item.State)) : this.orders_back;
+		},
+		// 确定检索
+		confirm_search() {
+			this.filter_box_bool = false;
+			this.filter_box_num = 99;
+			// 车牌
+			let license_plate_s = this.license_plate
+				.filter((item) => item.bool)
+				.map((rv) => {
+					return rv.text;
+				});
+
+			// 车牌
+			let driver_search_s = this.driver_search
+				.filter((item) => item.bool)
+				.map((rv) => {
+					return rv.text;
+				});
+			// 区域
+
+			let area_search_s = this.area_search
+				.filter((item) => item.bool)
+				.map((rv) => {
+					return rv.text;
+				});
+
+			// 获取当前标签的规则
+			const rules = this.filtering_rules[this.tab_index];
+			// 计算可以展示的数据
+			this.orders = rules.length ? this.orders_back.filter((item) => rules.includes(item.State)) : this.orders_back;
+			// 检索车辆
+			if (license_plate_s.length) this.orders = this.orders.filter((rv) => license_plate_s.indexOf(rv.Plate) != -1);
+			// 检索司机
+			if (driver_search_s.length) this.orders = this.orders.filter((rv) => driver_search_s.indexOf(rv.EngineerInfo.ChineseName) != -1);
+			// 检索区域
+			if (area_search_s.length) this.orders = this.orders.filter((rv) => area_search_s.indexOf(rv.Area) != -1);
+		},
+		//
 		filter_data(num) {
-			this.filter_box_bool = true;
-			this.filter_box_num = num;
-			console.log(num);
+			if (this.filter_box_num == num) {
+				this.filter_box_bool = false;
+				this.filter_box_num = 99;
+			} else {
+				this.filter_box_bool = true;
+				this.filter_box_num = num;
+			}
 		},
 		//
 		confirm_car_code() {
@@ -323,6 +419,7 @@ export default {
 			const rules = this.filtering_rules[index];
 			// 计算可以展示的数据
 			this.orders = rules.length ? this.orders_back.filter((item) => rules.includes(item.State)) : this.orders_back;
+			// 查看是否存在筛选项
 		},
 		// 返回上一页
 		custom_back() {
@@ -368,11 +465,39 @@ export default {
 				// 获取展示数据
 				this.orders = this.orders_back;
 
-				// 刷新后保持标签页
-				// 获取当前标签的规则
-				const rules = this.filtering_rules[this.tab_index];
-				// 计算可以展示的数据
-				this.orders = rules.length ? this.orders_back.filter((item) => rules.includes(item.State)) : this.orders_back;
+				// 收集车牌号
+				this.license_plate = [
+					...new Set(
+						this.orders_back.map((rv) => {
+							return rv.Plate;
+						})
+					)
+				];
+				this.license_plate = this.license_plate.map((rv) => {
+					return { text: rv, bool: false };
+				});
+				console.log(this.license_plate);
+				// 收集司机名称
+				this.driver_search = [...new Set(this.orders_back.filter((rv) => rv.EngineerInfo && rv.EngineerInfo.ChineseName).map((rv) => rv.EngineerInfo.ChineseName))];
+				this.driver_search = this.driver_search.map((rv) => {
+					return { text: rv, bool: false };
+				});
+				console.log(this.driver_search);
+				// 收集区域
+				this.area_search = [
+					...new Set(
+						this.orders_back.map((rv) => {
+							return rv.Area;
+						})
+					)
+				];
+				this.area_search = this.area_search.map((rv) => {
+					return { text: rv, bool: false };
+				});
+				console.log(this.area_search);
+
+				this.confirm_search();
+
 				// 提示刷新成功
 				if (str == '刷新') {
 					uni.showToast({
@@ -762,6 +887,31 @@ export default {
 		position: relative;
 		z-index: 980;
 
+		.filter_options {
+			width: 100%;
+			min-height: 100px;
+			background-color: #fff;
+			position: absolute;
+			z-index: 99;
+			left: 0;
+			top: 44px;
+			padding: 12px;
+			box-sizing: border-box;
+
+			.filter_options_item {
+				width: calc((100% - 24px) / 3);
+				height: 32px;
+				background: #f5f6fa;
+				margin: 4px;
+				border-radius: 4px;
+				text-align: center;
+				line-height: 32px;
+				font-size: 14px;
+				float: left;
+				color: #181c26b2;
+			}
+		}
+
 		.filter_box {
 			width: 100%;
 			min-height: 0;
@@ -771,12 +921,42 @@ export default {
 			left: 0;
 			transition: 0.4s;
 			overflow: hidden;
-			top: 44px;
+			top: 144px;
 			.filter_box_but {
 				width: 100%;
 				height: 64px;
-				border: 2px solid #2979ff;
+				// border: 2px solid #2979ff;
+				padding: 12px 16px;
 				box-sizing: border-box;
+				display: flex;
+				justify-content: start;
+				.but_left {
+					width: 25%;
+					height: 100%;
+					border: 1px solid #090f2029;
+					border-radius: 4px;
+					margin-right: 3%;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					image {
+						width: 20px;
+						height: 20px;
+					}
+				}
+
+				.but_right {
+					width: 72%;
+					height: 100%;
+					border: 1px solid #090f2029;
+					border-radius: 4px;
+					text-align: center;
+					line-height: 40px;
+					font-size: 14px;
+					font-weight: bold;
+					background-color: #4170fc;
+					color: #ffffff;
+				}
 			}
 		}
 		.features_item {
