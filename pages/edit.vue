@@ -110,6 +110,16 @@
 			</div>
 
 			<div class="order_information_item">
+				<span>开始时间</span>
+				<span class="info">{{ data.RentalFrom }}</span>
+			</div>
+
+			<div class="order_information_item">
+				<span>结束时间</span>
+				<span class="info">{{ data.RentalTo }}</span>
+			</div>
+
+			<div class="order_information_item">
 				<span>下单时间</span>
 				<span class="info">{{ data.SOCreateDate }}</span>
 			</div>
@@ -126,7 +136,7 @@
 		</div>
 
 		<!--  -->
-		<div class="operation_area" v-if="data.State != 4 && data.State != 9">
+		<div class="operation_area" v-if="data.State != 4 && data.State != 9 && data.IsMy">
 			<!-- 分配 -->
 			<div class="but" v-if="data.State == 1">
 				<div class="button" @tap.stop="update_order('分配')">分配</div>
@@ -372,6 +382,8 @@ export default {
 				// 联系人与电话
 				this.data.LinkManStr = this.data.LinkMan.ChineseName + ' ' + this.data.LinkMan.MobilePhone;
 				// 联系人与电话
+				this.data.RentalFrom = this.data.RentalFrom.substring(0, this.data.RentalFrom.indexOf('.')).replace('T', ' ');
+				this.data.RentalTo = this.data.RentalTo.substring(0, this.data.RentalTo.indexOf('.')).replace('T', ' ');
 				this.data.SOCreateDate = this.data.SOCreateDate.substring(0, this.data.SOCreateDate.indexOf('.')).replace('T', ' ');
 				this.data.PayDt = this.data.PayDt.substring(0, this.data.PayDt.indexOf('.')).replace('T', ' ');
 				// 车辆特征

@@ -78,7 +78,10 @@
 
 		<!-- 没有订单 -->
 		<div class="no_orders" v-if="!orders.length">
-			<image src="../static/icon/none.png" mode="aspectFit"></image>
+			<div class="image">
+				<u-image width="140px" height="140px" src="../static/icon/none.png" mode="aspectFit" :fade="false"></u-image>
+				<p class="p1">暂时没有任务了</p>
+			</div>
 		</div>
 
 		<!-- 有订单 -->
@@ -598,13 +601,19 @@ export default {
 
 	.no_orders {
 		width: 100%;
-		height: 100%;
-		height: calc(100% - 172px - var(--status-bar-height));
+		height: calc(100% - 200px - var(--status-bar-height));
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		image {
-			width: 150px;
+		.image {
+			width: 140px;
+			height: 160px;
+			.p1 {
+				line-height: 20px;
+				font-size: 14px;
+				color: #181c26b2;
+				text-align: center;
+			}
 		}
 	}
 
