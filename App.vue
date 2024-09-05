@@ -2,16 +2,6 @@
 export default {
 	onLaunch: function () {
 		console.log('打开app');
-		try {
-			// const value = uni.getStorageSync('token');
-			// if (value) {
-			// 	uni.navigateTo({
-			// 		url: `/pages/index`
-			// 	});
-			// }
-		} catch (e) {
-			// error
-		}
 	},
 	onShow: function () {
 		console.log('app进入前台');
@@ -41,6 +31,4 @@ export default {
 		overflow: auto;
 	}
 
-	/*每个页面公共css */
-</style>
 </style>
