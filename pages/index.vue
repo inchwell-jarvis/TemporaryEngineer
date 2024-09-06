@@ -234,20 +234,82 @@ export default {
 			// 司机检索
 			driver_search: [],
 			// 区域检索
-			area_search: []
+			area_search: [],
+
+			// 检索项集合
+			retrieval: {
+				pageNum: 1,
+				numPerPage: 999999,
+				orderField: '',
+				orderDirection: '',
+				plate: '', //车牌号
+				cityEnable: '', // 可用城市
+				currentCus: '', // 当前客户
+				enable: true, //是否启用
+				state: -1, // 状态
+				includeReservedDt: true, //包含被预定日期
+				id: ''
+			}
 		};
 	},
 	onLoad() {},
 	onShow() {
 		this.start();
 	},
-	created() {},
+	created() {
+		this.retrieve_parameters();
+	},
 	onReachBottom() {
 		console.log('123456');
 		// this.pageNum += 1;
 		// this.init();
 	},
 	methods: {
+		// 检索必须数据
+		retrieve_parameters() {
+			// 车牌
+			this.apix('CarRental/GetCarRentals', this.retrieval).then((rv) => {
+				// 收集车牌号
+				this.license_plate = [
+					...new Set(
+						rv.Data.Dtos.map((rv) => {
+							return rv.Plate;
+						})
+					)
+				];
+				this.license_plate = this.license_plate.map((rv) => {
+					return { text: rv, bool: false };
+				});
+			});
+			// 收集车牌号
+			this.apix('System/GetArea').then((rv) => {
+				console.log(rv.Data);
+				this.area_search = [
+					...new Set(
+						rv.Data.map((rv) => {
+							return rv.Value;
+						})
+					)
+				];
+				this.area_search = this.area_search.map((rv) => {
+					return { text: rv, bool: false };
+				});
+			});
+			// 获取可用工程师
+			this.apix('System/GetEmployeeMini', { type: '15' }).then((rv) => {
+				console.log(rv.Data);
+				this.driver_search = [
+					...new Set(
+						rv.Data.map((rv) => {
+							return rv.Name;
+						})
+					)
+				];
+				this.driver_search = this.driver_search.map((rv) => {
+					return { text: rv, bool: false };
+				});
+			});
+		},
 		reset_data() {
 			this.filter_box_bool = false;
 			this.filter_box_num = 99;
@@ -467,38 +529,6 @@ export default {
 				});
 				// 获取展示数据
 				this.orders = this.orders_back;
-
-				// 收集车牌号
-				this.license_plate = [
-					...new Set(
-						this.orders_back.map((rv) => {
-							return rv.Plate;
-						})
-					)
-				];
-				this.license_plate = this.license_plate.map((rv) => {
-					return { text: rv, bool: false };
-				});
-				console.log(this.license_plate);
-				// 收集司机名称
-				this.driver_search = [...new Set(this.orders_back.filter((rv) => rv.EngineerInfo && rv.EngineerInfo.ChineseName).map((rv) => rv.EngineerInfo.ChineseName))];
-				this.driver_search = this.driver_search.map((rv) => {
-					return { text: rv, bool: false };
-				});
-				console.log(this.driver_search);
-				// 收集区域
-				this.area_search = [
-					...new Set(
-						this.orders_back.map((rv) => {
-							return rv.Area;
-						})
-					)
-				];
-				this.area_search = this.area_search.map((rv) => {
-					return { text: rv, bool: false };
-				});
-				console.log(this.area_search);
-
 				this.confirm_search();
 
 				// 提示刷新成功
@@ -898,7 +928,7 @@ export default {
 
 		.filter_options {
 			width: 100%;
-			min-height: 100px;
+			height: 100px;
 			background-color: #fff;
 			position: absolute;
 			z-index: 99;
@@ -906,6 +936,7 @@ export default {
 			top: 44px;
 			padding: 12px;
 			box-sizing: border-box;
+			overflow: auto;
 
 			.filter_options_item {
 				width: calc((100% - 24px) / 3);
