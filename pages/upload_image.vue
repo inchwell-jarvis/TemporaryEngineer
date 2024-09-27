@@ -109,7 +109,6 @@
 </template>
 
 <script>
-import { pathToBase64 } from '../method/base64/index.js';
 export default {
 	data() {
 		return {
@@ -261,35 +260,38 @@ export default {
 		},
 		// 上传图片
 		async upload_image() {
-			const that = this;
-			that.upload_image_popup = false;
-			// 生成对应位置图片名称
-			uni.chooseImage({
-				count: 1, //默认9
-				sizeType: ['compressed'], //可以指定是原图还是压缩图，默认二者都有
-				sourceType: ['camera'], //从相册选择
-				success: async function (res) {
-					// 获取第一张图片
-					var Image = res.tempFilePaths[0];
-					// 转为base64
-					const base64 = await pathToBase64(Image);
-					// 开始上传
-					let data = {
-						Id: that.user_data.ID,
-						FileStr: base64,
-						// FileName: '',
-						Type: String(that.upload_tags + 1), // 当前上传的是属于哪个类目的 Type[1车辆图片、2工具图片、3其它文件]
-						Other: that.upload_image_index // 当前上传的属于类目的第几个文件
-					};
-					that.apix('CarRental/UploadCarSOOrderImage', data, { method: 'post' }).then((rv) => {
-						that.hint('上传成功！');
-						that.start();
-					});
-				}
+			// 关闭弹窗
+			this.upload_image_popup = false;
+
+			// 必须先获得结果才能解构
+			const result = await uni.chooseImage({
+				count: 1,
+				sizeType: ['compressed'],
+				sourceType: ['camera']
+			});
+
+			// 解构出错误信息和结果
+			const [err, res] = result;
+
+			// 如果存在错误信息 则表示失败
+			if (err) return false;
+
+			// 压缩base64编码 默认压缩到300KB以下
+			const base64 = await this.compress_base64(res.tempFilePaths[0]);
+
+			// 开始上传
+			let data = {
+				Id: this.user_data.ID,
+				FileStr: base64,
+				// FileName: '',
+				Type: String(this.upload_tags + 1), // 当前上传的是属于哪个类目的 Type[1车辆图片、2工具图片、3其它文件]
+				Other: this.upload_image_index // 当前上传的属于类目的第几个文件
+			};
+			this.apix('CarRental/UploadCarSOOrderImage', data, { method: 'post' }).then((rv) => {
+				this.hint('上传成功！');
+				this.start();
 			});
 		}
-		//
-		//
 	}
 };
 </script>
