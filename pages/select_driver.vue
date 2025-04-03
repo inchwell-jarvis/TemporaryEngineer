@@ -57,286 +57,316 @@
 </template>
 
 <script>
-export default {
-	data() {
-		return {
-			// 订单信息
-			user_data: {},
-			// 检索工程师
-			search_driver: '',
-			// 工程师集合
-			engineers_back: [],
-			engineers: []
-		};
-	},
-	onLoad(option) {
-		let data = JSON.parse(decodeURIComponent(option.data));
-		this.user_data = data;
-		console.log(data);
-	},
-	created() {
-		this.start();
-	},
-	watch: {
-		search_driver(new_search_driver) {
-			if (!new_search_driver) this.engineers = this.engineers_back;
-			if (new_search_driver) this.engineers = this.engineers_back.filter((rv) => rv.Name.indexOf(new_search_driver.trim()) != -1);
-		}
-	},
-	methods: {
-		custom_back() {
-			uni.navigateTo({
-				url: `/pages/index`
-			});
+	export default {
+		data() {
+			return {
+				// 订单信息
+				user_data: {},
+				// 检索工程师
+				search_driver: '',
+				// 工程师集合
+				engineers_back: [],
+				engineers: []
+			};
 		},
-		// 获取可用工程师
-		start() {
-			this.apix('System/GetEmployeeMini', { type: '15' }).then((rv) => {
-				console.log(rv);
-				this.engineers_back = rv.Data;
-				this.engineers_back.forEach((rv) => {
-					this.$set(rv, 'bool', false);
-				});
-				this.engineers = this.engineers_back;
-			});
+		onLoad(option) {
+			let data = JSON.parse(decodeURIComponent(option.data));
+			this.user_data = data;
+			console.log(data);
 		},
-		// 打电话
-		call_engineers(item) {
-			// 综合正则表达式，适用于移动电话和固定电话
-			const phoneRegex = /^(\+?86)?(0\d{2,3}-)?1[3-9]\d{9}$|^(0\d{2,3}-)?\d{7,8}$/;
-			if (!phoneRegex.test(item.Mobile)) {
-				uni.showToast({
-					title: '电话格式不正确',
-					duration: 2000,
-					icon: 'error'
-				});
-				return;
+		created() {
+			this.start();
+		},
+		watch: {
+			search_driver(new_search_driver) {
+				if (!new_search_driver) this.engineers = this.engineers_back;
+				if (new_search_driver) this.engineers = this.engineers_back.filter((rv) => rv.Name.indexOf(new_search_driver.trim()) != -1);
 			}
-
-			uni.makePhoneCall({
-				phoneNumber: item.Mobile //仅为示例
-			});
 		},
-		// 选择了工程师
-		engineer_click(item) {
-			//
-			this.engineers.forEach((element) => {
-				if (element.Mobile == item.Mobile) {
-					element.bool = true;
-				} else {
-					element.bool = false;
+		methods: {
+			custom_back() {
+				uni.navigateTo({
+					url: `/pages/index`
+				});
+			},
+			// 获取可用工程师
+			start() {
+				this.apix('System/GetEmployeeMini', { type: '15', isEnable: 1 }).then((rv) => {
+					console.log(rv);
+					this.engineers_back = rv.Data;
+					this.engineers_back.forEach((rv) => {
+						this.$set(rv, 'bool', false);
+					});
+					this.engineers = this.engineers_back;
+				});
+			},
+			// 打电话
+			call_engineers(item) {
+				// 综合正则表达式，适用于移动电话和固定电话
+				const phoneRegex = /^(\+?86)?(0\d{2,3}-)?1[3-9]\d{9}$|^(0\d{2,3}-)?\d{7,8}$/;
+				if (!phoneRegex.test(item.Mobile)) {
+					uni.showToast({
+						title: '电话格式不正确',
+						duration: 2000,
+						icon: 'error'
+					});
+					return;
 				}
-			});
-			//
-			this.apix('CarRental/UpdateCarSOOrderStateA', { id: this.user_data.ID, str: item.EmployeeId }, { method: 'post' }).then((rv) => {
-				console.log(rv);
-				uni.showToast({
-					title: '任务分配成功!',
-					icon: 'none'
+
+				uni.makePhoneCall({
+					phoneNumber: item.Mobile //仅为示例
 				});
-				uni.navigateBack({
-					url: './index'
+			},
+			// 选择了工程师
+			engineer_click(item) {
+				//
+				this.engineers.forEach((element) => {
+					if (element.Mobile == item.Mobile) {
+						element.bool = true;
+					} else {
+						element.bool = false;
+					}
 				});
-			});
+				//
+				this.apix('CarRental/UpdateCarSOOrderStateA', { id: this.user_data.ID, str: item.EmployeeId }, { method: 'post' }).then((rv) => {
+					console.log(rv);
+					uni.showToast({
+						title: '任务分配成功!',
+						icon: 'none'
+					});
+					uni.navigateBack({
+						url: './index'
+					});
+				});
+			}
 		}
-	}
-};
+	};
 </script>
 
 <style lang="scss" scoped>
-.select_driver {
-	width: 100%;
-	height: 100%;
-	color: #181c26;
-	background-color: #f5f6fa;
-	//
-	.right_icon {
+	.select_driver {
 		width: 100%;
 		height: 100%;
-		padding: 0 10px;
-		box-sizing: border-box;
+		color: #181c26;
+		background-color: #f5f6fa;
 
-		image {
-			width: 26px;
-			height: 26px;
-		}
-	}
-	//
-	.order_info {
-		width: 100%;
-		height: 58px;
-		border-bottom: 0.5px solid #090f2014;
-		box-sizing: border-box;
-		background: #ffffff;
-		padding: 8px 16px;
-		.dispatch_car {
-			width: 32px;
-			height: 28px;
-			float: left;
-			.dispatch_car_icon_s {
-				width: 100%;
-				height: 20px;
-				margin-top: 4px;
-				border-radius: 3px;
-				background-color: #e54337;
-				font-size: 12px;
-				text-align: center;
-				line-height: 20px;
-				color: #ffffff;
-			}
-			.dispatch_car_icon_q {
-				width: 100%;
-				height: 20px;
-				margin-top: 4px;
-				border-radius: 3px;
-				background-color: #4170fc;
-				font-size: 12px;
-				text-align: center;
-				line-height: 20px;
-				color: #ffffff;
-			}
-		}
-		.address_time {
-			width: calc(100% - 42px);
-			height: 100%;
-			float: left;
-			margin-left: 10px;
-			.door_to_door_time {
-				width: 100%;
-				height: 22px;
-				line-height: 22px;
-				font-size: 14px;
-				font-weight: bold;
-				overflow: hidden;
-			}
-			.task_address {
-				width: 100%;
-				max-height: 20px;
-				font-size: 14px;
-				line-height: 22px;
-				color: #181c26b2;
-				overflow: hidden;
-				word-break: break-all; /* break-all(允许在单词内换行。) */
-				text-overflow: ellipsis; /* 超出部分省略号 */
-				display: -webkit-box; /** 对象作为伸缩盒子模型显示 **/
-				-webkit-box-orient: vertical; /** 设置或检索伸缩盒对象的子元素的排列方式 **/
-				-webkit-line-clamp: 1; /** 显示的行数 **/
-			}
-		}
-	}
-	.search_for_driver {
-		width: 100%;
-		height: 52px;
-		background: #ffffff;
-		padding: 8px 16px;
-		box-sizing: border-box;
-		.input_box {
+		//
+		.right_icon {
 			width: 100%;
 			height: 100%;
-			background: #f5f6fa;
-			border-radius: 6px;
-			padding: 8px;
+			padding: 0 10px;
 			box-sizing: border-box;
-			.search_icon {
-				width: 20px;
-				height: 20px;
-				float: left;
-				padding: 2px;
-				box-sizing: border-box;
-				image {
-					width: 100%;
-					height: 100%;
-				}
-			}
-			.search_close {
-				width: 20px;
-				height: 20px;
-				float: left;
-				padding: 2px;
-				box-sizing: border-box;
-				image {
-					width: 100%;
-					height: 100%;
-				}
-			}
-			input {
-				width: calc(100% - 40px);
-				height: 20px;
-				float: left;
-				font-size: 14px;
+
+			image {
+				width: 26px;
+				height: 26px;
 			}
 		}
-	}
-	//
-	.content {
-		width: 100%;
-		height: calc(100% - 58px - 52px - 44px - var(--status-bar-height));
-		overflow: auto;
-		padding: 0 10px;
-		box-sizing: border-box;
-		.engineers {
+
+		//
+		.order_info {
 			width: 100%;
-			height: 72px;
-			background-color: #fff;
-			border-radius: 8px;
-			margin-top: 10px;
-			padding: 12px;
+			height: 58px;
+			border-bottom: 0.5px solid #090f2014;
 			box-sizing: border-box;
-			.info {
-				width: calc(100% - 40px);
-				height: 100%;
+			background: #ffffff;
+			padding: 8px 16px;
+
+			.dispatch_car {
+				width: 32px;
+				height: 28px;
 				float: left;
-				.icon {
-					width: 30px;
-					height: 100%;
-					float: left;
-					image {
-						width: 20px;
-						height: 20px;
-					}
+
+				.dispatch_car_icon_s {
+					width: 100%;
+					height: 20px;
+					margin-top: 4px;
+					border-radius: 3px;
+					background-color: #e54337;
+					font-size: 12px;
+					text-align: center;
+					line-height: 20px;
+					color: #ffffff;
 				}
-				.text {
-					width: calc(100% - 30px);
-					height: 100%;
-					float: left;
-					.p1 {
-						width: 100%;
-						height: 26px;
-						line-height: 26px;
-						font-weight: bold;
-						font-size: 18px;
-					}
-					.p2 {
-						width: 100%;
-						height: 22px;
-						line-height: 22px;
-						font-size: 14px;
-						color: #181c26b2;
-					}
+
+				.dispatch_car_icon_q {
+					width: 100%;
+					height: 20px;
+					margin-top: 4px;
+					border-radius: 3px;
+					background-color: #4170fc;
+					font-size: 12px;
+					text-align: center;
+					line-height: 20px;
+					color: #ffffff;
 				}
 			}
-			.phone {
-				width: 40px;
-				height: 100%;
-				float: right;
-				display: flex;
-				align-items: center;
-				justify-content: end;
 
-				.phone_icon {
-					width: 28px;
-					height: 28px;
-					background: #f5f6fa;
-					border-radius: 6px;
-					padding: 6px;
+			.address_time {
+				width: calc(100% - 42px);
+				height: 100%;
+				float: left;
+				margin-left: 10px;
+
+				.door_to_door_time {
+					width: 100%;
+					height: 22px;
+					line-height: 22px;
+					font-size: 14px;
+					font-weight: bold;
+					overflow: hidden;
+				}
+
+				.task_address {
+					width: 100%;
+					max-height: 20px;
+					font-size: 14px;
+					line-height: 22px;
+					color: #181c26b2;
+					overflow: hidden;
+					word-break: break-all;
+					/* break-all(允许在单词内换行。) */
+					text-overflow: ellipsis;
+					/* 超出部分省略号 */
+					display: -webkit-box;
+					/** 对象作为伸缩盒子模型显示 **/
+					-webkit-box-orient: vertical;
+					/** 设置或检索伸缩盒对象的子元素的排列方式 **/
+					-webkit-line-clamp: 1;
+					/** 显示的行数 **/
+				}
+			}
+		}
+
+		.search_for_driver {
+			width: 100%;
+			height: 52px;
+			background: #ffffff;
+			padding: 8px 16px;
+			box-sizing: border-box;
+
+			.input_box {
+				width: 100%;
+				height: 100%;
+				background: #f5f6fa;
+				border-radius: 6px;
+				padding: 8px;
+				box-sizing: border-box;
+
+				.search_icon {
+					width: 20px;
+					height: 20px;
+					float: left;
+					padding: 2px;
 					box-sizing: border-box;
+
 					image {
 						width: 100%;
 						height: 100%;
 					}
 				}
+
+				.search_close {
+					width: 20px;
+					height: 20px;
+					float: left;
+					padding: 2px;
+					box-sizing: border-box;
+
+					image {
+						width: 100%;
+						height: 100%;
+					}
+				}
+
+				input {
+					width: calc(100% - 40px);
+					height: 20px;
+					float: left;
+					font-size: 14px;
+				}
+			}
+		}
+
+		//
+		.content {
+			width: 100%;
+			height: calc(100% - 58px - 52px - 44px - var(--status-bar-height));
+			overflow: auto;
+			padding: 0 10px;
+			box-sizing: border-box;
+
+			.engineers {
+				width: 100%;
+				height: 72px;
+				background-color: #fff;
+				border-radius: 8px;
+				margin-top: 10px;
+				padding: 12px;
+				box-sizing: border-box;
+
+				.info {
+					width: calc(100% - 40px);
+					height: 100%;
+					float: left;
+
+					.icon {
+						width: 30px;
+						height: 100%;
+						float: left;
+
+						image {
+							width: 20px;
+							height: 20px;
+						}
+					}
+
+					.text {
+						width: calc(100% - 30px);
+						height: 100%;
+						float: left;
+
+						.p1 {
+							width: 100%;
+							height: 26px;
+							line-height: 26px;
+							font-weight: bold;
+							font-size: 18px;
+						}
+
+						.p2 {
+							width: 100%;
+							height: 22px;
+							line-height: 22px;
+							font-size: 14px;
+							color: #181c26b2;
+						}
+					}
+				}
+
+				.phone {
+					width: 40px;
+					height: 100%;
+					float: right;
+					display: flex;
+					align-items: center;
+					justify-content: end;
+
+					.phone_icon {
+						width: 28px;
+						height: 28px;
+						background: #f5f6fa;
+						border-radius: 6px;
+						padding: 6px;
+						box-sizing: border-box;
+
+						image {
+							width: 100%;
+							height: 100%;
+						}
+					}
+				}
 			}
 		}
 	}
-}
 </style>

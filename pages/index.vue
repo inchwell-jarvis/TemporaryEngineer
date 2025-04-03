@@ -5,9 +5,11 @@
 
 
 		<!-- 导航栏 -->
-		<u-navbar title="创建订单" :title-bold="true" title-color="#181C26" :is-back="false">
+		<u-navbar title="英之杰派车系统" :title-bold="true" title-color="#181C26" :is-back="false">
 			<view class="right_icon">
-				<image style="float: left" src="../static/icon/plus-circle.png" mode="" @click="engineer_create_order()"></image>
+				<image style="float: left" src="../static/icon/logout.png" mode="" @click="custom_back()"></image>
+
+				<image style="float: right" src="../static/icon/plus-circle.png" mode="" @click="engineer_create_order()"></image>
 				<image style="float: right" src="../static/icon/refresh.png" mode="" @click="update_start()" :class="{ rotate: timer != null }"></image>
 			</view>
 		</u-navbar>
@@ -264,6 +266,11 @@
 			// this.init();
 		},
 		methods: {
+			custom_back() {
+				uni.navigateTo({
+					url: './login'
+				})
+			},
 			// 检索必须数据
 			retrieve_parameters() {
 				// 车牌

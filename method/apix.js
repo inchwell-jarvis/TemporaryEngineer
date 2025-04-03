@@ -2,7 +2,7 @@ import $store from '../store/index.js'
 let api_header = $store.state.api_header + '/api/'
 // 常量定义
 const TOKEN_KEY = 'token';
-// const LOGIN_PAGE_URL = '../pages/signIn/index';
+const LOGIN_PAGE_URL = '../pages/login';
 
 /**
  * 调用接口的通用函数
@@ -58,7 +58,7 @@ export default async function apix(http, data = {}, methods = {}) {
 
 					if (state !== 0) {
 						uni.showToast({ title: responseData.Msg, icon: "none" });
-
+						console.log(state)
 						// 身份过期
 						if (state === 3) {
 							uni.navigateTo({ url: LOGIN_PAGE_URL });

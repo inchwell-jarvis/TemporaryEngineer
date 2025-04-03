@@ -44,7 +44,7 @@
 			<!-- 获取验证码按钮 -->
 			<div class="send" :style="{ background: mobile_number ? '#4170FC' : '#4170FC52' }" @click="get_verification_code()">获取验证码</div>
 			<!-- 模拟区域经理登录 -->
-			<div class="send" :style="{ background: mobile_number ? '#4170FC' : '#4170FC52' }" @click="simulation_area_manager()">区域经理</div>
+			<!-- <div class="send" :style="{ background: mobile_number ? '#4170FC' : '#4170FC52' }" @click="simulation_area_manager()">区域经理</div> -->
 
 			<!-- 协议 -->
 			<div class="protocol" @click="is_agree = !is_agree">

@@ -100,6 +100,14 @@
 			<u-picker mode="time" v-model="time_show1" :params="{year: true,month: true,day: true,hour: true}" @confirm='confirm_time1'></u-picker>
 			<u-picker mode="time" v-model="time_show0" :params="{year: true,month: true,day: true,hour: true}" @confirm='confirm_time0'></u-picker>
 
+
+
+			<u-mask :show="submit_order_state == '创建中'" :mask-click-able='false'>
+				<view class="warp">
+					<view class="rect" @tap.stop>创建中<u-loading mode="flower"></u-loading></view>
+				</view>
+			</u-mask>
+
 		</div>
 	</view>
 </template>
@@ -345,9 +353,11 @@
 				this.apix('CarRental/SubmitCarSO', this.SubmitCarSOData, { method: 'POST' })
 					.then((rv) => {
 						console.log(rv.Data);
-						this.generate_a_quotation(rv.Data)
+						setTimeout(() => {
+							this.generate_a_quotation(rv.Data)
+						}, 3000)
 					})
-					.finally(() => {
+					.catch(() => {
 						this.submit_order_state = '等待提交'
 					});
 			},
@@ -374,6 +384,22 @@
 <style lang="scss" scoped>
 	.rotate {
 		animation: rotate-animation 1s linear infinite;
+	}
+
+	.warp {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+	}
+
+	.rect {
+		width: 50%;
+		height: 40px;
+		border-radius: 10px;
+		background-color: #fff;
+		line-height: 40px;
+		text-align: center;
 	}
 
 	.engineer_create_order {
